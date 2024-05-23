@@ -90,7 +90,7 @@ apply(words, 1, function(x) add_weights(x))
 ## Visualization
 
 ### heatmap
-
+Darker the spot more possible that uppercase letter is followed by lowercase.
 ``` r
 heatmap(weight_mat)
 ```
@@ -98,7 +98,7 @@ heatmap(weight_mat)
 ![](word_analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ### letter co-occurence
-
+Graph shows which letters are most likely to be present together in a word
 ``` r
 weight_mat %>% as.dfm() %>%
   fcm() %>% textplot_network()
