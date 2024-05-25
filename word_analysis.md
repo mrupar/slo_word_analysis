@@ -74,10 +74,23 @@ for (w in 1:nrow(words)){
 heatmap(weight_mat)
 ```
 
+<<<<<<< HEAD
 ![](word_analysis_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 Visualization of letter to letter relation in slovenian words. Graph
 shows most probable letter to follow upercase letters.
 
+=======
+Application of weights function on data
+
+``` r
+apply(words, 1, function(x) add_weights(x))
+```
+
+## Visualization
+
+### heatmap
+Darker the spot more possible that uppercase letter is followed by lowercase.
+>>>>>>> 02ed2c0030329c5579a5f6611ad2f1adbdc0c8c9
 ``` r
 heatmap(weight_mat)
 ```
@@ -200,7 +213,7 @@ heatmap(weight_mat)
 ![](word_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ### letter co-occurence
-
+Graph shows which letters are most likely to be present together in a word
 ``` r
 weight_mat %>% as.dfm() %>%
   fcm() %>% textplot_network()
