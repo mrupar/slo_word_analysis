@@ -5,6 +5,7 @@ Miha Rupar
 - [Data import](#data-import)
 - [Data procesing](#data-procesing)
 - [Calculate weight](#calculate-weight)
+  - [Clustering](#clustering)
 - [Data filtering](#data-filtering)
   - [3](#3)
   - [4](#4)
@@ -46,7 +47,7 @@ Defining weight matrix
 ``` r
 letter <- c("a", "b", "c", "č", "d", "e", "f", "g", "h", "i", "j", "k", "l", 
             "m", "n", "o", "p", "r", "s", "š", "t", "u", "v", "z", "ž",".")
-n_letter <- letter
+n_letter <- toupper(letter)
 
 weight_mat <- matrix(0, nrow = 26, ncol = 26)
 colnames(weight_mat) <- letter
@@ -67,35 +68,68 @@ add_weights <- function(word,lvl){
   cut_word = substring(word, 2)
   add_weights(cut_word,lvl)
 }
+```
 
-for (w in 1:nrow(words)){
-  add_weights(words$besede[w],1)
+``` r
+filtered_words <- function(word, lvl) {
+  l1 <- substring(toupper(word), 1, lvl)
+  if(nchar(word) < lvl + 1) {
+    return(l1 %in% toupper(n_letter))
+  }
+  l2 <- substring(tolower(word), lvl + 1, lvl + 1)
+  if(l1 %in% toupper(n_letter) & l2 %in% tolower(letter)) {
+    return(filtered_words(substring(word, 2), lvl))
+  }else {
+    return(FALSE)
+  }
 }
+```
+
+``` r
+filtered_mat <- weight_mat
+reset <- function(){
+  filtered_mat[filtered_mat < 1500] <<- 0
+  n_letter <<- c()
+  for (i in rownames(filtered_mat)){
+    for (j in colnames(filtered_mat)){
+      if (filtered_mat[i,j] != 0){
+        n_letter <- c(n_letter,paste0(i,j))
+      }
+    }
+  }
+  weight_mat <- matrix(0, ncol = 26, nrow = length(n_letter))
+  colnames(weight_mat) <- letter
+  rownames(weight_mat) <- toupper(n_letter)
+}
+```
+
+``` r
+calculate_weights <- function(lvl){
+  if(lvl != 1){reset()}
+  for (w in 1:nrow(words)){
+  if(filtered_words(words$besede[w],lvl)){
+    add_weights(words$besede[w],lvl)
+    }
+  }
+}
+```
+
+Calculate weights and visualize
+
+``` r
+calculate_weights(1)
+heatmap(weight_mat, Colv=NA, Rowv=NA)
+```
+
+![](word_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+### Clustering
+
+``` r
 heatmap(weight_mat)
 ```
 
-<<<<<<< HEAD
-![](word_analysis_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-Visualization of letter to letter relation in slovenian words. Graph
-shows most probable letter to follow upercase letters.
-
-=======
-Application of weights function on data
-
-``` r
-apply(words, 1, function(x) add_weights(x))
-```
-
-## Visualization
-
-### heatmap
-Darker the spot more possible that uppercase letter is followed by lowercase.
->>>>>>> 02ed2c0030329c5579a5f6611ad2f1adbdc0c8c9
-``` r
-heatmap(weight_mat)
-```
-
-![](word_analysis_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](word_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ## Data filtering
 
@@ -104,119 +138,35 @@ eliminate letter relations that do not occur offten and with that make
 our matrix smaller \### 2
 
 ``` r
-filtered_mat <- weight_mat
-filtered_mat[filtered_mat < 1500] <- 0
-n_letter <- c()
-for (i in rownames(filtered_mat)){
-  for (j in colnames(filtered_mat)){
-    if (filtered_mat[i,j] != 0){
-      n_letter <- c(n_letter,paste0(i,j))
-    }
-  }
-}
-
-weight_mat <- matrix(0, ncol = 26, nrow = length(n_letter))
-colnames(weight_mat) <- letter
-rownames(weight_mat) <- toupper(n_letter)
-
-add_weights <- function(word,lvl){
-  if(nchar(word)<lvl+1){return()}
-  l1 = substring(toupper(word), 1, lvl)
-  l2 = substring(tolower(word), lvl+1, lvl+1)
-  if(l1 %in% toupper(n_letter) & l2 %in% tolower(letter)){
-    weight_mat[l1, l2] <<- weight_mat[l1, l2] + 1
-  }
-  cut_word = substring(word, 2)
-  add_weights(cut_word,lvl)
-}
-
-for (w in 1:nrow(words)){
-  add_weights(words$besede[w],2)
-}
-heatmap(weight_mat)
+calculate_weights(2)
+heatmap(weight_mat, Colv=NA, Rowv=NA)
 ```
 
-![](word_analysis_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](word_analysis_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ### 3
 
 ``` r
-filtered_mat <- weight_mat
-filtered_mat[filtered_mat < 1500] <- 0
-n_letter <- c()
-for (i in rownames(filtered_mat)){
-  for (j in colnames(filtered_mat)){
-    if (filtered_mat[i,j] != 0){
-      n_letter <- c(n_letter,paste0(i,j))
-    }
-  }
-}
-
-weight_mat <- matrix(0, ncol = 26, nrow = length(n_letter))
-colnames(weight_mat) <- letter
-rownames(weight_mat) <- toupper(n_letter)
-
-add_weights <- function(word,lvl){
-  if(nchar(word)<lvl+1){return()}
-  l1 = substring(toupper(word), 1, lvl)
-  l2 = substring(tolower(word), lvl+1, lvl+1)
-  if(l1 %in% toupper(n_letter) & l2 %in% tolower(letter)){
-    weight_mat[l1, l2] <<- weight_mat[l1, l2] + 1
-  }
-  cut_word = substring(word, 2)
-  add_weights(cut_word,lvl)
-}
-
-for (w in 1:nrow(words)){
-  add_weights(words$besede[w],3)
-}
-heatmap(weight_mat)
+calculate_weights(3)
+heatmap(weight_mat, Colv=NA, Rowv=NA)
 ```
 
-![](word_analysis_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](word_analysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ### 4
 
 ``` r
-filtered_mat <- weight_mat
-filtered_mat[filtered_mat < 1500] <- 0
-n_letter <- c()
-for (i in rownames(filtered_mat)){
-  for (j in colnames(filtered_mat)){
-    if (filtered_mat[i,j] != 0){
-      n_letter <- c(n_letter,paste0(i,j))
-    }
-  }
-}
-
-weight_mat <- matrix(0, ncol = 26, nrow = length(n_letter))
-colnames(weight_mat) <- letter
-rownames(weight_mat) <- toupper(n_letter)
-
-add_weights <- function(word,lvl){
-  if(nchar(word)<lvl+1){return()}
-  l1 = substring(toupper(word), 1, lvl)
-  l2 = substring(tolower(word), lvl+1, lvl+1)
-  if(l1 %in% toupper(n_letter) & l2 %in% tolower(letter)){
-    weight_mat[l1, l2] <<- weight_mat[l1, l2] + 1
-  }
-  cut_word = substring(word, 2)
-  add_weights(cut_word,lvl)
-}
-
-for (w in 1:nrow(words)){
-  add_weights(words$besede[w],4)
-}
-heatmap(weight_mat)
+calculate_weights(4)
+heatmap(weight_mat, Colv=NA, Rowv=NA)
 ```
 
-![](word_analysis_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](word_analysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ### letter co-occurence
-Graph shows which letters are most likely to be present together in a word
+
 ``` r
 weight_mat %>% as.dfm() %>%
   fcm() %>% textplot_network()
 ```
 
-![](word_analysis_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](word_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
