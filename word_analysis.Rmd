@@ -11,6 +11,7 @@ library(htm2txt)
 library(tidyverse)
 library(quanteda)
 library(quanteda.textplots)
+library(pvclust)
 ```
 
 
@@ -48,7 +49,7 @@ letter <- c("a", "b", "c", "č", "d", "e", "f", "g", "h", "i", "j", "k", "l",
             "m", "n", "o", "p", "r", "s", "š", "t", "u", "v", "z", "ž",".")
 n_letter <- toupper(letter)
 
-weight_mat <- matrix(0, nrow = 26, ncol = 26)
+weight_mat <- matrix(0, nrow = length(n_letter), ncol = length(letter))
 colnames(weight_mat) <- letter
 rownames(weight_mat) <- toupper(letter)
 
@@ -106,10 +107,12 @@ reset <- function(cutoff){
 
 ```{r}
 calculate_weights <- function(lvl,cutoff=1500){
-  if(lvl != 1){reset(cutoff)}
-  for (w in 1:nrow(words)){
-  if(filtered_words(words$besede[w],lvl)){
-    add_weights(words$besede[w],lvl)
+  for (clvl in 1:lvl){
+    if(lvl != 1){reset(cutoff)}
+    for (w in 1:nrow(words)){
+    if(filtered_words(words$besede[w],lvl)){
+      add_weights(words$besede[w],lvl)
+      }
     }
   }
 }
@@ -135,52 +138,13 @@ heatmap(weight_mat, Colv=NA, Rowv=NA)
 ```{r}
 heatmap(weight_mat)
 
-# Compute the distance matrix
-distance_matrix <- dist(normalize(weight_mat), method = "canberra")
-# Hierarchical clustering
-hc <- hclust(distance_matrix, method = "average")
-# Plot the dendrogram
-plot(hc, main = "Dendrogram of Letters", xlab = "Letters", ylab = "Distance")
-```
+weight_mat %>% normalize() %>%
+  dist(method = "canberra") %>%
+  hclust(method = "average") %>%
+  plot(xlab = "Letters", ylab = "Distance")
 
-
-
-## Data filtering
-To avoid having too large a matrix when guessing the next letter, let's eliminate letter relations that do not occur offten and with that make our matrix smaller 
-
-### 2
-```{r}
-calculate_weights(2)
-heatmap(weight_mat, Colv=NA, Rowv=NA)
-
-```
-
-
-### 3
-```{r}
-calculate_weights(3)
-heatmap(weight_mat, Colv=NA, Rowv=NA)
-```
-
-### 4
-```{r}
-calculate_weights(4,10)
-heatmap(weight_mat, Colv=NA, Rowv=NA)
-```
-### 5
-```{r}
-calculate_weights(5,10)
-heatmap(weight_mat, Colv=NA, Rowv=NA)
-```
-
-### 6
-```{r}
-calculate_weights(6,1)
-heatmap(weight_mat, Colv=NA, Rowv=NA)
-```
-
-```{r}
-weight_mat
+weight_mat %>% normalize() %>%
+  pvclust() %>% plot()
 ```
 
 ### letter co-occurence
@@ -188,4 +152,7 @@ weight_mat
 weight_mat %>% as.dfm() %>%
   fcm() %>% textplot_network()
 ```
+
+
+
 
