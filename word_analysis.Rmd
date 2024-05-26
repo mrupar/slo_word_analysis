@@ -87,9 +87,9 @@ filtered_words <- function(word, lvl) {
 ```
 
 ```{r}
-reset <- function(){
+reset <- function(cutoff){
   filtered_mat <- weight_mat
-  filtered_mat[filtered_mat < 1500] <- 0
+  filtered_mat[filtered_mat < cutoff] <- 0
   n_letter <<- c()
   for (i in rownames(filtered_mat)){
     for (j in colnames(filtered_mat)){
@@ -105,13 +105,21 @@ reset <- function(){
 ```
 
 ```{r}
-calculate_weights <- function(lvl){
-  if(lvl != 1){reset()}
+calculate_weights <- function(lvl,cutoff=1500){
+  if(lvl != 1){reset(cutoff)}
   for (w in 1:nrow(words)){
   if(filtered_words(words$besede[w],lvl)){
     add_weights(words$besede[w],lvl)
     }
   }
+}
+```
+
+```{r}
+normalize <- function(mat){
+  letter_freq <- mat %>% 
+    rowSums() %>% as.data.frame()
+  sweep(mat, 1, letter_freq$., FUN = "/") %>% return()
 }
 ```
 
@@ -126,6 +134,13 @@ heatmap(weight_mat, Colv=NA, Rowv=NA)
 ### Clustering
 ```{r}
 heatmap(weight_mat)
+
+# Compute the distance matrix
+distance_matrix <- dist(normalize(weight_mat), method = "canberra")
+# Hierarchical clustering
+hc <- hclust(distance_matrix, method = "average")
+# Plot the dendrogram
+plot(hc, main = "Dendrogram of Letters", xlab = "Letters", ylab = "Distance")
 ```
 
 
@@ -137,6 +152,7 @@ To avoid having too large a matrix when guessing the next letter, let's eliminat
 ```{r}
 calculate_weights(2)
 heatmap(weight_mat, Colv=NA, Rowv=NA)
+
 ```
 
 
@@ -148,10 +164,24 @@ heatmap(weight_mat, Colv=NA, Rowv=NA)
 
 ### 4
 ```{r}
-calculate_weights(4)
+calculate_weights(4,10)
+heatmap(weight_mat, Colv=NA, Rowv=NA)
+```
+### 5
+```{r}
+calculate_weights(5,10)
 heatmap(weight_mat, Colv=NA, Rowv=NA)
 ```
 
+### 6
+```{r}
+calculate_weights(6,1)
+heatmap(weight_mat, Colv=NA, Rowv=NA)
+```
+
+```{r}
+weight_mat
+```
 
 ### letter co-occurence
 ```{r}
